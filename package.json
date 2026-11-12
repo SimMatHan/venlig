@@ -17,13 +17,16 @@
     "generate:vapid": "node scripts/generate-vapid.mjs"
   },
   "dependencies": {
+    "@cloudflare/workers-oauth-provider": "^1.2.4",
+    "@modelcontextprotocol/server": "^2.4.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "hono": "^4.13.18",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "workbox-window": "^7.4.1",
-    "wouter": "^3.13.0"
+    "wouter": "^3.13.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261112.1",

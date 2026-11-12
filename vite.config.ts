@@ -7,7 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const CACHE_VERSION = 'v1';
 
 /** Ruter som Workeren svarer på. Må aldrig få app-skallen fra service workeren. */
-const WORKER_ROUTES = ['/api'];
+const WORKER_ROUTES = ['/api', '/mcp', '/authorize', '/token', '/register', '/.well-known'];
 
 const theme = '#F6F1E7';
 

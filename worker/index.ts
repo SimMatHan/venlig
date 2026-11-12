@@ -1,14 +1,29 @@
+import { OAuthProvider, type OAuthHelpers } from '@cloudflare/workers-oauth-provider';
+import { createMcpHandler } from '@modelcontextprotocol/server';
 import { Hono } from 'hono';
+import { bearerAuth } from 'hono/bearer-auth';
+import { timingSafeEqual } from 'hono/utils/buffer';
+import { handleAuthorize, SCOPE } from './auth';
+import { buildServer } from './mcp';
+import { applySync, parseSyncPayload, readMeta } from './records';
 import { isDue, isValidTime, isValidTimeZone } from './schedule';
 import { publicKeyFromJwk, sendEmptyPush, type VapidKeys } from './webpush';
 
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
+  /** Tokens og klienter til MCP-forbindelsens OAuth. */
+  OAUTH_KV: KVNamespace;
+  /** Sættes af OAuthProvider på requests til defaultHandler. */
+  OAUTH_PROVIDER: OAuthHelpers;
   /** JWK-streng. Sættes med `wrangler secret put VAPID_PRIVATE_KEY`. Uden den er påmindelser slået fra. */
   VAPID_PRIVATE_KEY?: string;
   /** fx 'mailto:dig@example.com'. Sættes med `wrangler secret put VAPID_SUBJECT`. */
   VAPID_SUBJECT?: string;
+  /** Langt tilfældigt token, som appen bruger til sync. Uden det er sync slået fra. */
+  SYNC_TOKEN?: string;
+  /** Adgangskode, når Claude forbindes til /mcp. Uden den kan MCP ikke forbindes. */
+  MCP_PASSWORD?: string;
 }
 
 interface SubscriptionRow {
@@ -71,7 +86,66 @@ app.post('/push/unsubscribe', async (c) => {
   return c.json({ ok: true });
 });
 
+app.use('/sync', async (c, next) => {
+  if (!c.env.SYNC_TOKEN) return c.json({ error: 'not_configured' }, 503);
+  await next();
+});
+app.use(
+  '/sync',
+  bearerAuth({ verifyToken: (token, c) => timingSafeEqual(token, (c.env as Env).SYNC_TOKEN ?? '') }),
+);
+
+app.get('/sync', async (c) => c.json(await readMeta(c.env.DB)));
+
+app.post('/sync', async (c) => {
+  const payload = parseSyncPayload(await c.req.json().catch(() => null));
+  if (!payload) return c.json({ error: 'invalid' }, 400);
+  await applySync(c.env.DB, payload);
+  return c.json({ ok: true, syncedAt: Date.now() });
+});
+
 app.all('*', (c) => c.json({ error: 'not_found' }, 404));
+
+/** MCP-endpointet. OAuthProvider har allerede tjekket tokenet, før vi kommer hertil. */
+const mcpHandler = {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const handler = createMcpHandler(() => buildServer(env.DB));
+    return handler.fetch(request);
+  },
+};
+
+const defaultHandler = {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const { pathname } = new URL(request.url);
+    if (pathname === '/authorize') return handleAuthorize(request, env.OAUTH_PROVIDER, env.MCP_PASSWORD);
+    if (pathname.startsWith('/api/')) return app.fetch(request, env, ctx);
+    return env.ASSETS.fetch(request);
+  },
+};
+
+// OAuth-ressourcen skal kende sin egen fulde adresse. Den kendes først ved
+// første request (workers.dev, eget domæne eller localhost), så providers
+// oprettes pr. origin og genbruges.
+const providers = new Map<string, OAuthProvider<Env>>();
+function providerFor(origin: string): OAuthProvider<Env> {
+  let p = providers.get(origin);
+  if (!p) {
+    p = new OAuthProvider<Env>({
+      apiRoute: '/mcp',
+      apiHandler: mcpHandler,
+      defaultHandler,
+      authorizeEndpoint: '/authorize',
+      tokenEndpoint: '/token',
+      clientRegistrationEndpoint: '/register',
+      clientIdMetadataDocumentEnabled: true,
+      scopesSupported: [SCOPE],
+      requiredScopes: [SCOPE],
+      resourceMetadata: { resource: `${origin}/mcp`, authorization_servers: [origin] },
+    });
+    providers.set(origin, p);
+  }
+  return p;
+}
 
 async function sendDueReminders(env: Env): Promise<void> {
   const keys = vapidKeys(env);
@@ -103,7 +177,9 @@ async function sendDueReminders(env: Env): Promise<void> {
 }
 
 export default {
-  fetch: app.fetch,
+  fetch(request, env, ctx) {
+    return providerFor(new URL(request.url).origin).fetch(request, env, ctx);
+  },
   async scheduled(_controller, env, ctx) {
     ctx.waitUntil(sendDueReminders(env));
   },
