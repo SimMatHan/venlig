@@ -7,18 +7,32 @@
 		"directory": "./dist",
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application",
-		"run_worker_first": ["/api/*"]
+		"run_worker_first": [
+			"/api/*"
+		]
 	},
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "venlig",
-			// Udfyldes med id'et fra `npx wrangler d1 create venlig` (se README). Ikke en hemmelighed.
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			// Fra `npx wrangler d1 create venlig`. Ikke en hemmelighed.
+			"database_id": "6ec2e42f-48f7-48f4-a13d-11f9a79769da",
 			"migrations_dir": "migrations"
+		},
+		{
+			"binding": "venlig",
+			"database_name": "venlig",
+			"database_id": "6ec2e42f-48f7-48f4-a13d-11f9a79769da",
+			"remote": true
 		}
 	],
 	// Sender daglige påmindelser. Tjekker hvert 5. minut, hvem der skal have en.
-	"triggers": { "crons": ["*/5 * * * *"] },
-	"observability": { "enabled": true }
+	"triggers": {
+		"crons": [
+			"*/5 * * * *"
+		]
+	},
+	"observability": {
+		"enabled": true
+	}
 }
