@@ -1,0 +1,49 @@
+{
+  "name": "venlig",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n web,api -c green,blue \"vite\" \"npm:dev:api\"",
+    "dev:api": "wrangler d1 migrations apply venlig --local && wrangler dev --port 8787",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "deploy:ci": "wrangler d1 migrations apply venlig --remote && wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply venlig --local",
+    "db:migrate:remote": "wrangler d1 migrations apply venlig --remote",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "generate:icons": "pwa-assets-generator",
+    "generate:vapid": "node scripts/generate-vapid.mjs"
+  },
+  "dependencies": {
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^4.4.0",
+    "hono": "^4.13.18",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "workbox-window": "^7.4.1",
+    "wouter": "^3.13.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261112.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vite-pwa/assets-generator": "^2.0.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "concurrently": "^10.0.7",
+    "fake-indexeddb": "^6.2.8",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.160.1"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261110.1": true
+  }
+}

@@ -1,0 +1,4 @@
+# Kopiér til .dev.vars og udfyld med `npm run generate:vapid`.
+# Bruges kun til daglige påmindelser (web push). Appen virker uden.
+VAPID_PRIVATE_KEY={"kty":"EC","crv":"P-256","x":"...","y":"...","d":"..."}
+VAPID_SUBJECT=mailto:dig@example.com

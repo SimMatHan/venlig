@@ -1,0 +1,158 @@
+@import 'tailwindcss';
+
+/* Farver som variabler, så lys/mørk kun skal defineres ét sted. */
+:root {
+  --bg: #f6f1e7;
+  --card: #fffcf6;
+  --sand: #ece3d2;
+  --line: #e2d8c5;
+  --ink: #2c2924;
+  --muted: #625a50;
+  --sage: #4e6f57;
+  --sage-soft: #dfe8dc;
+  --on-sage: #ffffff;
+  --clay: #a8644a;
+  --clay-soft: #f3e1d6;
+  --heat-0: #ebe3d4;
+  --heat-1: #cfdcc9;
+  --heat-2: #a9c2a6;
+  --heat-3: #7fa281;
+  --heat-4: #56785d;
+  /* Humør/energi-serier – valideret for farveblindhed mod kortfladen. */
+  --series-mood: #228a50;
+  --series-energy: #c08a2a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #1b1d1a;
+    --card: #252823;
+    --sand: #30332d;
+    --line: #3a3e37;
+    --ink: #ece7dc;
+    --muted: #b1aa9d;
+    --sage: #9cbca2;
+    --sage-soft: #2f3b31;
+    --on-sage: #17201a;
+    --clay: #e0a58c;
+    --clay-soft: #3d2f28;
+    --heat-0: #2d302a;
+    --heat-1: #34463a;
+    --heat-2: #4a6550;
+    --heat-3: #6c8f71;
+    --heat-4: #9cbca2;
+    --series-mood: #3fa86c;
+    --series-energy: #b5802a;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #1b1d1a;
+  --card: #252823;
+  --sand: #30332d;
+  --line: #3a3e37;
+  --ink: #ece7dc;
+  --muted: #b1aa9d;
+  --sage: #9cbca2;
+  --sage-soft: #2f3b31;
+  --on-sage: #17201a;
+  --clay: #e0a58c;
+  --clay-soft: #3d2f28;
+  --heat-0: #2d302a;
+  --heat-1: #34463a;
+  --heat-2: #4a6550;
+  --heat-3: #6c8f71;
+  --heat-4: #9cbca2;
+  --series-mood: #3fa86c;
+  --series-energy: #b5802a;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-sand: var(--sand);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
+  --color-on-sage: var(--on-sage);
+  --color-clay: var(--clay);
+  --color-clay-soft: var(--clay-soft);
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-display: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    font-size: 18px;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    overscroll-behavior-y: none;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* iOS zoomer ind på felter under 16px – vores er 18px. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted);
+    opacity: 0.75;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--sage);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-3xl bg-card p-5 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_4px_16px_rgb(80_60_30/0.05)];
+  }
+  .field {
+    @apply w-full rounded-2xl border border-line bg-bg px-4 py-3 outline-none transition focus:border-sage;
+    min-height: 48px;
+  }
+  .btn {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 font-medium transition active:scale-[0.98] disabled:opacity-50;
+  }
+  /* Bruges sammen med .btn, fx class="btn btn-primary". */
+  .btn-primary {
+    @apply bg-sage text-on-sage;
+  }
+  .btn-soft {
+    @apply bg-sage-soft text-ink;
+  }
+  .btn-ghost {
+    @apply text-sage;
+  }
+  .chip {
+    @apply inline-flex min-h-11 items-center rounded-full border border-line px-4 text-[0.9rem] transition;
+  }
+  .chip-on {
+    @apply border-sage bg-sage text-on-sage;
+  }
+  .label {
+    @apply mb-2 block font-display text-[1.05rem] font-semibold;
+  }
+  .hint {
+    @apply text-[0.9rem] text-muted;
+  }
+}
