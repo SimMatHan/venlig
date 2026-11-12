@@ -3,14 +3,16 @@
 	"name": "venlig",
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-11-01",
+	// nodejs_compat: MCP-SDK'et. global_fetch_strictly_public: kræves når OAuth henter klienters metadata (CIMD).
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
 		"directory": "./dist",
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application",
-		"run_worker_first": [
-			"/api/*"
-		]
+		"run_worker_first": ["/api/*", "/mcp", "/mcp/*", "/authorize", "/token", "/register", "/.well-known/*"]
 	},
+	// Tokens og klienter til MCP-forbindelsens OAuth-login.
+	"kv_namespaces": [{ "binding": "OAUTH_KV", "id": "749602362f7c4a848f220359f6d97d06" }],
 	"d1_databases": [
 		{
 			"binding": "DB",

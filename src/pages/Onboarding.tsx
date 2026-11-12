@@ -22,7 +22,7 @@ export function OnboardingPage() {
               En lille dagbog til dig selv. Notér dit humør, de gode ting og dine vaner – på under tre minutter om dagen.
             </p>
             <ul className="mt-8 space-y-3 text-[1rem]">
-              <li>🌿 Alt bliver på din telefon. Ingen login, ingen tracking.</li>
+              <li>🌿 Alt bliver på din telefon. Ingen login, ingen tracking. Du kan selv vælge at synke til Claude.</li>
               <li>💛 Ingen skam, ingen streaks. Hver dag du kigger forbi tæller.</li>
               <li>📖 Bøger, der kan hjælpe dig med at være venligere mod dig selv.</li>
             </ul>

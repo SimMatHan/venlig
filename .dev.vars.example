@@ -2,3 +2,7 @@
 # Bruges kun til daglige påmindelser (web push). Appen virker uden.
 VAPID_PRIVATE_KEY={"kty":"EC","crv":"P-256","x":"...","y":"...","d":"..."}
 VAPID_SUBJECT=mailto:dig@example.com
+
+# Sync fra appen og login til Claude-forbindelsen (MCP).
+SYNC_TOKEN=dev-sync-token
+MCP_PASSWORD=dev-password

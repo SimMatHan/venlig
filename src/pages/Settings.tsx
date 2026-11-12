@@ -8,6 +8,7 @@ import { BUILD_ID, BUILD_TIME, useAppUpdate, type CheckResult } from '../lib/app
 import { deleteAll, downloadBackup, exportAll, importAll, parseBackup } from '../lib/backup';
 import { disableReminder, enableReminder, isIOS, ReminderError, reminderSupport, updateReminderTime } from '../lib/reminders';
 import { updateSettings, useSettings } from '../lib/settings';
+import { disableSync, enableSync, SyncError, syncNow, useSyncStatus } from '../lib/sync';
 
 export function SettingsPage() {
   const settings = useSettings();
@@ -56,12 +57,14 @@ export function SettingsPage() {
         </Link>
 
         <BackupSection />
+        <SyncSection />
         <AppSection />
 
         <Section title="Om dine data">
           <p className="text-[0.95rem] leading-relaxed text-muted">
-            Alt, hvad du skriver, gemmes kun på denne telefon. Der er ingen login og ingen tracking. Hvis du slår påmindelser til, kender serveren kun en
-            anonym adresse til notifikationen og det tidspunkt, du har valgt.
+            Alt, hvad du skriver, gemmes på denne telefon. Der er ingen login og ingen tracking. Hvis du slår påmindelser til, kender serveren kun en
+            anonym adresse til notifikationen og det tidspunkt, du har valgt. Kun hvis du selv slår “Sync og Claude” til, sendes en kopi af dine data til
+            din egen server, så Claude kan læse dem.
           </p>
         </Section>
       </div>
@@ -235,6 +238,103 @@ function BackupSection() {
           </div>
         )}
       </div>
+    </Section>
+  );
+}
+
+function SyncSection() {
+  const status = useSyncStatus();
+  const [token, setToken] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmOff, setConfirmOff] = useState(false);
+
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+    } catch (e) {
+      setError(e instanceof SyncError ? e.message : 'Noget gik galt. Prøv igen.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const last =
+    status.kind === 'idle' && status.lastSyncedAt
+      ? new Date(status.lastSyncedAt).toLocaleString('da-DK', { dateStyle: 'medium', timeStyle: 'short' })
+      : null;
+
+  return (
+    <Section title="Sync og Claude" hint="Send en kopi af dine data til din egen server, så du kan tale med Claude om dem.">
+      {status.kind === 'off' ? (
+        <>
+          <p className="text-[0.95rem] leading-relaxed text-muted">
+            Slået fra. Dine data ligger kun på telefonen. Slår du sync til, sendes ændringer automatisk til serveren. Claude kan kun læse dem, ikke ændre dem.
+          </p>
+          <form
+            className="mt-3 space-y-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (token.trim()) void run(() => enableSync(token));
+            }}
+          >
+            <input
+              className="field"
+              type="password"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Sync-nøgle (SYNC_TOKEN)"
+              autoComplete="off"
+              aria-label="Sync-nøgle"
+            />
+            <button type="submit" className="btn btn-primary w-full" disabled={busy || !token.trim()}>
+              {busy ? 'Forbinder …' : 'Slå sync til'}
+            </button>
+          </form>
+        </>
+      ) : (
+        <>
+          <p className="text-[0.95rem]" aria-live="polite">
+            {status.kind === 'syncing' && 'Synkroniserer …'}
+            {status.kind === 'idle' && (last ? `Senest synkroniseret ${last}.` : 'Sync er slået til.')}
+            {status.kind === 'offline' && 'Du er offline. Ændringer sendes, når du har forbindelse igen.'}
+            {status.kind === 'error' && <span className="text-clay">{status.message}</span>}
+          </p>
+          {!confirmOff ? (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" className="btn btn-soft" disabled={busy || status.kind === 'syncing'} onClick={() => run(syncNow)}>
+                Synk nu
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={() => setConfirmOff(true)}>
+                Slå fra
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 rounded-2xl bg-clay-soft p-4">
+              <p className="font-medium">Slå sync fra?</p>
+              <p className="mt-1 text-[0.95rem]">Vil du også slette kopien på serveren? Så kan Claude ikke længere læse dine data.</p>
+              <div className="mt-3 flex flex-col gap-2">
+                <button type="button" className="btn bg-clay text-white" disabled={busy} onClick={() => run(() => disableSync(true)).then(() => setConfirmOff(false))}>
+                  Slå fra og slet kopien
+                </button>
+                <button type="button" className="btn btn-soft" disabled={busy} onClick={() => run(() => disableSync(false)).then(() => setConfirmOff(false))}>
+                  Slå fra, behold kopien
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setConfirmOff(false)}>
+                  Annullér
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+      {error && (
+        <p role="alert" className="mt-3 text-[0.95rem] text-clay">
+          {error}
+        </p>
+      )}
     </Section>
   );
 }
