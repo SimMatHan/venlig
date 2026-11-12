@@ -49,7 +49,8 @@ export default defineConfig({
         cacheId: `venlig-${CACHE_VERSION}`,
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: WORKER_ROUTES.map((route) => new RegExp(`^${route}(/|$)`)),
+        // Workbox matcher mod sti + query, så `/authorize?client_id=…` skal også ramme.
+        navigateFallbackDenylist: WORKER_ROUTES.map((route) => new RegExp(`^${route.replace(/\./g, '\\.')}(?:[/?]|$)`)),
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         // Push-beskeder (daglig påmindelse) håndteres i en lille separat fil.
