@@ -18,12 +18,6 @@
 			// Fra `npx wrangler d1 create venlig`. Ikke en hemmelighed.
 			"database_id": "6ec2e42f-48f7-48f4-a13d-11f9a79769da",
 			"migrations_dir": "migrations"
-		},
-		{
-			"binding": "venlig",
-			"database_name": "venlig",
-			"database_id": "6ec2e42f-48f7-48f4-a13d-11f9a79769da",
-			"remote": true
 		}
 	],
 	// Sender daglige påmindelser. Tjekker hvert 5. minut, hvem der skal have en.
